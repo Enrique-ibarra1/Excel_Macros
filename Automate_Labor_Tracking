@@ -1,0 +1,72 @@
+Sub Automate_labor_tracking()
+
+    Dim OriginalSheet As Worksheet
+    Dim OutputSheet As Worksheet
+    Dim Employees As Object
+    Dim ActionsCreated As Object
+    Dim ActionsMoved As Object
+    Dim ActionsPicked As Object
+    Dim Employee As Variant
+    Dim i As Long
+    Dim Action As String
+    Dim EmployeeName As String
+
+    Set OriginalSheet = ActiveSheet
+    Set Employees = CreateObject("Scripting.Dictionary")
+    Set ActionsCreated = CreateObject("Scripting.Dictionary")
+    Set ActionsMoved = CreateObject("Scripting.Dictionary")
+    Set ActionsPicked = CreateObject("Scripting.Dictionary")
+
+    ' Loop through all rows
+    For i = 2 To OriginalSheet.Cells(OriginalSheet.Rows.Count, "D").End(xlUp).Row
+        Action = OriginalSheet.Cells(i, "B").Value
+        EmployeeName = OriginalSheet.Cells(i, "D").Value
+
+        If Not Employees.Exists(EmployeeName) Then
+            Employees.Add EmployeeName, EmployeeName
+            ActionsCreated.Add EmployeeName, 0
+            ActionsMoved.Add EmployeeName, 0
+            ActionsPicked.Add EmployeeName, 0
+        End If
+
+        Select Case Action
+            Case "Created Handling Unit"
+                ActionsCreated(EmployeeName) = ActionsCreated(EmployeeName) + 1
+            Case "Moved Handling Unit"
+                ActionsMoved(EmployeeName) = ActionsMoved(EmployeeName) + 1
+            Case "Picked Handling Unit"
+                ActionsPicked(EmployeeName) = ActionsPicked(EmployeeName) + 1
+        End Select
+    Next i
+
+    ' Create output sheet
+    If Not Evaluate("ISREF('Employee Output'!A1)") Then
+        Set OutputSheet = Worksheets.Add(After:=Worksheets(Worksheets.Count))
+        OutputSheet.Name = "Employee Output"
+    Else
+        Set OutputSheet = Worksheets("Employee Output")
+    End If
+
+    OutputSheet.Cells.Clear
+
+    OutputSheet.Cells(1, "A").Value = "Employee"
+    OutputSheet.Cells(1, "B").Value = "Created Handling Unit"
+    OutputSheet.Cells(1, "C").Value = "Moved Handling Unit"
+    OutputSheet.Cells(1, "D").Value = "Picked Handling Unit"
+
+    i = 2
+    For Each Employee In Employees.Keys
+        OutputSheet.Cells(i, "A").Value = Employee
+        OutputSheet.Cells(i, "B").Value = ActionsCreated(Employee)
+        OutputSheet.Cells(i, "C").Value = ActionsMoved(Employee)
+        OutputSheet.Cells(i, "D").Value = ActionsPicked(Employee)
+        i = i + 1
+    Next Employee
+
+    OutputSheet.Columns("A:D").AutoFit
+    OutputSheet.Columns("A:D").Sort Key1:=OutputSheet.Range("A2"), Order1:=xlAscending, Header:=xlYes
+
+End Sub
+
+
+
