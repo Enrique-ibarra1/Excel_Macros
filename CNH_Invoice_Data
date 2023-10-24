@@ -1,0 +1,100 @@
+Sub CNH_INVOICE_DATA()
+
+    ' Declare variables
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim currentRowT As Long
+    Dim dict As Object
+    Dim Key As Variant
+    Dim outputStr As String
+    Dim brasilList As String
+    Dim rng As Range
+
+    ' Set the worksheet
+    Set ws = Sheets("CNH")
+
+    ' Find the last row in column Q
+    LastRow = ws.Cells(ws.Rows.Count, "Q").End(xlUp).Row
+
+    ' Create a dictionary to store unique values from column Q
+    Set dict = CreateObject("Scripting.Dictionary")
+
+    ' Loop through the rows in column Q, starting from row 2
+    For i = 2 To LastRow
+        ' Exclude rows with "Brasil" in column B or C
+        If InStr(ws.Cells(i, "B").Value, "BRASIL") = 0 And InStr(ws.Cells(i, "C").Value, "BRASIL") = 0 Then
+            ' Check if the value in column Q is not in the dictionary
+            If Not dict.Exists(ws.Cells(i, "Q").Value) Then
+                ' Add the value to the dictionary
+                dict(ws.Cells(i, "Q").Value) = ws.Cells(i, "A").Value
+            Else
+                ' Append the value from column A to the existing key in the dictionary
+                dict(ws.Cells(i, "Q").Value) = dict(ws.Cells(i, "Q").Value) & ", " & ws.Cells(i, "A").Value
+            End If
+        End If
+    Next i
+
+    ' Loop through the unique keys in the dictionary
+    For Each Key In dict.Keys
+        ' Find the first row with the current Q value, starting from row 2
+        Set rng = ws.Range("Q2:Q" & LastRow).Find(Key)
+
+        ' Check if the Find method returned an object
+        If Not rng Is Nothing Then
+            currentRowT = rng.Row
+
+            ' Create the output string
+            outputStr = "Assembly handling fees for warehouse receipts linked to " & Key & " - " & dict(Key)
+
+            ' Write the output string to column T
+            ws.Cells(currentRowT, "T").Value = outputStr
+        Else
+            MsgBox "Key not found in range: " & Key
+        End If
+    Next Key
+
+    ' Initialize the Brasil list
+    brasilList = ""
+
+    ' Loop through the rows in columns B and C, starting from row 2
+    For i = 2 To LastRow
+        ' Check if the cell in column B or C contains "BRASIL"
+        If InStr(ws.Cells(i, "B").Value, "BRASIL") > 0 Or InStr(ws.Cells(i, "C").Value, "BRASIL") > 0 Then
+            ' Append the value from column A to the Brasil list
+            If brasilList = "" Then
+                brasilList = ws.Cells(i, "A").Value
+            Else
+                brasilList = brasilList & ", " & ws.Cells(i, "A").Value
+            End If
+        End If
+    Next i
+
+    ' Create the output string for the Brasil list
+    outputStr = "Assembly handling fees for CNH BRASIL " & Format(ws.Cells(2, "G").Value, "mm/dd") & " - " & brasilList
+
+    ' Write the output string to cell U2
+    ws.Cells(1, "U").Value = outputStr
+    
+    'unwrap u2
+    ws.Columns("U").WrapText = False
+        ' Select the active sheet
+    Set ws = ActiveSheet
+
+    ' Find the last row in column L
+    LastRow = ws.Cells(ws.Rows.Count, "L").End(xlUp).Row
+
+    ' Loop through each row
+    For i = 2 To LastRow
+        ' Check if the value in column L is greater than 0
+        If ws.Cells(i, "L").Value > 0 Then
+            ' Extract only the date from cells F and G
+            dateOnlyF = Int(ws.Cells(i, "F").Value)
+            dateOnlyG = Int(ws.Cells(i, "G").Value)
+
+            ' Format the output and place it in column S
+            ws.Cells(i, "S").Value = ws.Cells(i, "A").Value & "-SRG-" & Format(dateOnlyF, "mm/dd/yyyy") & "-" & Format(dateOnlyG, "mm/dd/yyyy")
+        End If
+    Next i
+    
+End Sub
+
