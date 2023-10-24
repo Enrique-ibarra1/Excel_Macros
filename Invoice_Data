@@ -1,0 +1,23 @@
+Sub Invoice_Data()
+
+    Dim ws As Worksheet
+    Dim LastRow As Long
+    Dim i As Long
+    Dim outputStr As String
+    
+    Set ws = ActiveSheet
+    LastRow = ws.Cells(ws.Rows.Count, "L").End(xlUp).Row
+    
+    For i = 2 To LastRow
+        If ws.Cells(i, "L").Value > 0 Then
+            outputStr = "STORAGE - " & Format(ws.Cells(i, "F").Value, "m/d/yyyy") & "-" & Format(ws.Cells(i, "G").Value, "m/d/yyyy") & vbCrLf & _
+                        "LFD - " & Format(ws.Cells(i, "O").Value, "m/d/yyyy") & vbCrLf & _
+                        "DAYS BILLED - " & ws.Cells(i, "L").Value & vbCrLf & _
+                        "RECEIPT #" & ws.Cells(i, "A").Value
+                                    
+            ws.Cells(i, "R").Value = outputStr
+            
+        End If
+    Next i
+
+End Sub
