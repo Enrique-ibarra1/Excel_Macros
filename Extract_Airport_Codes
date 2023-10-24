@@ -1,0 +1,43 @@
+Sub AirportCodes()
+    Dim LastRow As Long
+    Dim i As Long
+    Dim houseAWB As String
+    Dim countryCode As String
+    
+    LastRow = Cells(Rows.Count, "K").End(xlUp).Row
+    
+    ' Create a regular expression object
+    Dim regex As Object
+    Set regex = CreateObject("VBScript.RegExp")
+    
+    ' Set the regular expression pattern to match the 3-character country code
+    regex.Pattern = "\d{9}[A-Z]{3}"
+    
+    For i = 2 To LastRow
+        houseAWB = Range("K" & i).Value
+        
+        ' Find the 3-character country code using regular expression
+        If regex.test(houseAWB) Then
+            countryCode = regex.Execute(houseAWB)(0)
+            countryCode = Right(countryCode, 3)
+        Else
+            ' If the 3-character country code is not found, assume the last 2 characters are the country code
+            countryCode = Right(houseAWB, 2)
+        End If
+        
+        Range("Q" & i).Value = countryCode
+    Next i
+    
+        For i = 2 To LastRow
+        countryCode = Range("Q" & i).Value
+        
+        ' Check if the country code is not a 3-character code
+        If Len(countryCode) <> 3 Then
+            ' Clear the cell if it is not a valid country code
+            Range("Q" & i).ClearContents
+        End If
+    Next i
+    
+    
+End Sub
+
