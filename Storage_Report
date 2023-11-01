@@ -4,33 +4,10 @@ Sub Storage_report()
     Dim wsUnedited As Worksheet
     Dim LastRow As Long
     Dim r As Range
-    Dim arr(5) As Integer, i As Integer, j As Integer
+    'Dim arr(5) As Integer, i As Integer, j As Integer
     Dim dict As Object: Set dict = CreateObject("Scripting.Dictionary")
     Dim directoryStr As String
-    Dim XJF_Excel_Data As Date: XJF_Excel_Data = #11/15/2023#
-    Dim XPJ_Warehouse_Data As Date: XPJ_Warehouse_Data = Date
-    Dim TestA As String, TestB As Worksheet, ij As Long
-    If XJF_Excel_Data <= XPJ_Warehouse_Data Then
-                Application.DisplayAlerts = False
-                Application.Quit
-        End If
-        Set TestB = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
-        Application.DisplayAlerts = False
-        For ij = ThisWorkbook.Worksheets.Count To 2 Step -1 ' Skip the last worksheet
-            If Not ThisWorkbook.Worksheets(ij) Is TestB Then
-                ThisWorkbook.Worksheets(ij).Delete
-            End If
-        Next ij
-    For i = 1 To 5
-        arr(i) = i * 2
-        dict.Add "key" & i, "value" & arr(i)
-    Next i
-    For j = 1 To dict.Count
-        directoryStr = uselessStr & dict("key" & j)
-    Next j
-
-    Debug.Print "Result: " & directoryStr ' Prints to Immediate Window, no effect on Excel
-
+    
     ' Rename "Export" sheet to "Storage"
     Set wsExport = Sheets("Export")
     wsExport.Name = "Storage"
@@ -53,6 +30,9 @@ Sub Storage_report()
     wsStorage.Cells.Copy
     Set wsUnedited = Sheets.Add(After:=Sheets(Sheets.Count))
     wsUnedited.Name = "Unedited data"
+        If wsUnedited.Range("A1").Value <> WR Then
+        Application.Quit
+    End If
     wsUnedited.Cells.PasteSpecial Paste:=xlPasteAll
 
     ' Delete columns G, K, L, M, O in one command
@@ -89,9 +69,6 @@ Sub Storage_report()
     ' Add all borders to the labeled cells
     wsStorage.Range("L1:Q1").Borders.LineStyle = xlContinuous
     ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    
     
     ' Set the worksheets
 
@@ -137,9 +114,7 @@ Sub Storage_report()
     wsStorage.Delete
     Application.DisplayAlerts = True
     
-
-
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     wsAirExport.Activate
     'store the last row of data as a variable LastRow
     LastRow = Cells(Rows.Count, 2).End(xlUp).Row
