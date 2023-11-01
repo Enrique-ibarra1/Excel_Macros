@@ -1,5 +1,5 @@
 Sub Invoice_Data()
-
+    'loops through data in excel sheet to create a string of billing details for copy / pasting into invoices
     Dim ws As Worksheet
     Dim LastRow As Long
     Dim i As Long
