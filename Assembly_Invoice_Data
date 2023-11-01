@@ -1,5 +1,4 @@
 Sub ASSEMBLY_INVOICE_DATA()
-    ' Declare variables
     Dim ws As Worksheet
     Dim LastRow As Long
     Dim currentRowT As Long
@@ -44,7 +43,6 @@ Sub ASSEMBLY_INVOICE_DATA()
         End If
     Next Key
     ws.Columns("T").WrapText = False
- ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
     Dim dateOnlyF As Date
     Dim dateOnlyG As Date
     ' Find the last row in column L
