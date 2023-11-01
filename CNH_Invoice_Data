@@ -1,6 +1,4 @@
 Sub CNH_INVOICE_DATA()
-
-    ' Declare variables
     Dim ws As Worksheet
     Dim LastRow As Long
     Dim currentRowT As Long
@@ -10,7 +8,6 @@ Sub CNH_INVOICE_DATA()
     Dim brasilList As String
     Dim rng As Range
 
-    ' Set the worksheet
     Set ws = Sheets("CNH")
 
     ' Find the last row in column Q
