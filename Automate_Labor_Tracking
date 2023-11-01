@@ -1,5 +1,5 @@
 Sub Automate_labor_tracking()
-
+    'counts the number of times an employee completes an action in the warehouse, outputs data to readable spreadsheet for data visualization
     Dim OriginalSheet As Worksheet
     Dim OutputSheet As Worksheet
     Dim Employees As Object
