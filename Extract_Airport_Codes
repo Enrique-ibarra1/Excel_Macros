@@ -1,4 +1,5 @@
 Sub AirportCodes()
+    'The following code extracts a 3 character IATA code from a string using a regular expression, used to find exact longitude / latitude of cargo origin
     Dim LastRow As Long
     Dim i As Long
     Dim houseAWB As String
@@ -10,18 +11,18 @@ Sub AirportCodes()
     Dim regex As Object
     Set regex = CreateObject("VBScript.RegExp")
     
-    ' Set the regular expression pattern to match the 3-character country code
+    ' Set the regular expression pattern to match the 3-character IATA code after the 9 digit House Airway Bill number
     regex.Pattern = "\d{9}[A-Z]{3}"
     
     For i = 2 To LastRow
         houseAWB = Range("K" & i).Value
         
-        ' Find the 3-character country code using regular expression
+        ' Find the 3-character airport code using regular expression
         If regex.test(houseAWB) Then
             countryCode = regex.Execute(houseAWB)(0)
             countryCode = Right(countryCode, 3)
         Else
-            ' If the 3-character country code is not found, assume the last 2 characters are the country code
+            ' If the 3-character airport code is not found, assume the last 2 characters are the country code
             countryCode = Right(houseAWB, 2)
         End If
         
@@ -33,11 +34,9 @@ Sub AirportCodes()
         
         ' Check if the country code is not a 3-character code
         If Len(countryCode) <> 3 Then
-            ' Clear the cell if it is not a valid country code
+            ' Clear the cell of data if it is not a valid country code
             Range("Q" & i).ClearContents
         End If
     Next i
-    
-    
 End Sub
 
